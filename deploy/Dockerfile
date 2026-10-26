@@ -46,30 +46,24 @@ RUN go install github.com/GoogleCloudPlatform/docker-credential-gcr/v2
 # Get Amazon ECR credential helper
 RUN go install github.com/awslabs/amazon-ecr-credential-helper/ecr-login/cli/docker-credential-ecr-login
 
-# Get ACR docker env credential helper.
-#
-# NOTE: the import path below says "chrismellard", but this does NOT build the
-# upstream code. go.mod has
-#
-#   replace github.com/chrismellard/docker-credential-acr-env => ./third_party/docker-credential-acr-env
-#
-# which points at OUR patched copy in this repo (anchored hostname check, fix
-# for GO-2026-6225; see third_party/docker-credential-acr-env/PATCHES.md), and
-# vendor/ holds that patched source. The import path is only kept so that the
-# replace works and the Go imports in pkg/creds and tools/tools.go do not
-# change. -mod=vendor builds from vendor/ and stops Go resolving anything from
-# the network, so upstream's vulnerable helper cannot be pulled in. The checks
-# below fail the image build if that ever stops being true.
-RUN go install -mod=vendor github.com/chrismellard/docker-credential-acr-env
+# Get ACR docker env credential helper. This builds OUR patched copy, which
+# lives in this repo as ordinary packages of the kaniko module under
+# third_party/docker-credential-acr-env (derived from
+# github.com/chrismellard/docker-credential-acr-env at 82a0ddb27589, with the
+# GO-2026-6225 hostname check fixed; see PATCHES.md there). There is no go.mod
+# replace and no upstream module involved. -mod=vendor stops Go resolving
+# anything from the network. The binary name is unchanged.
+RUN go install -mod=vendor ./third_party/docker-credential-acr-env
 
 # Guard (GO-2026-6225): fail the build unless the helper's build info shows it
-# came from the patched in-tree copy. This reads the binary's build info rather
-# than running it, so it works whatever the target arch (buildx emulation or a
-# cross-compiled binary).
-RUN go version -m /usr/local/bin/docker-credential-acr-env | grep -q '=>[[:space:]]*\./third_party/docker-credential-acr-env' || { \
-      echo "ERROR: docker-credential-acr-env was not built from ./third_party/docker-credential-acr-env." >&2; \
-      echo "It would ship the unpatched upstream helper (GO-2026-6225: ACR token leak to lookalike hosts)." >&2; \
-      echo "Check the replace directive in go.mod and re-run go mod vendor." >&2; \
+# is the in-tree package and that no github.com/chrismellard module was linked
+# in. This reads the binary's build info rather than running it, so it works
+# whatever the target arch (buildx emulation or a cross-compiled binary).
+RUN info="$(go version -m /usr/local/bin/docker-credential-acr-env)" && \
+    printf '%s\n' "${info}" | grep -Eq '^[[:space:]]*path[[:space:]]+github\.com/chainguard-dev/kaniko/third_party/docker-credential-acr-env$' && \
+    ! printf '%s\n' "${info}" | grep -q 'github\.com/chrismellard' || { \
+      echo "ERROR: docker-credential-acr-env is not the patched in-tree copy (third_party/docker-credential-acr-env)." >&2; \
+      echo "It may ship the unpatched upstream helper (GO-2026-6225: ACR token leak to lookalike hosts)." >&2; \
       go version -m /usr/local/bin/docker-credential-acr-env >&2; \
       exit 1; }
 
