@@ -22,7 +22,7 @@ were copied. The licence (Apache-2.0) and upstream copyright headers are kept.
 
 2. `go.mod` / `go.sum`: requirements raised to the versions kaniko's own
    build list already selects (for example `golang.org/x/crypto` from a 2022
-   pseudo-version to v0.53.0), and the `go` directive to 1.25.0. This does not
+   pseudo-version to the version kaniko uses), and the `go` directive to match. This does not
    change what kaniko builds (Go's minimum version selection already picked
    these versions); it stops scanners and Dependabot reporting the ancient
    upstream pins in this `go.mod` as findings. Keep them in step with the
