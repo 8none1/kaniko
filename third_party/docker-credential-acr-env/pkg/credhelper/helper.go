@@ -24,8 +24,8 @@ import (
 	"strings"
 
 	"github.com/Azure/go-autorest/autorest/azure/auth"
-	"github.com/chrismellard/docker-credential-acr-env/pkg/registry"
-	"github.com/chrismellard/docker-credential-acr-env/pkg/token"
+	"github.com/chainguard-dev/kaniko/third_party/docker-credential-acr-env/pkg/registry"
+	"github.com/chainguard-dev/kaniko/third_party/docker-credential-acr-env/pkg/token"
 	"github.com/docker/docker-credential-helpers/credentials"
 )
 

@@ -16,7 +16,7 @@ limitations under the License.
 package cmd
 
 import (
-	"github.com/chrismellard/docker-credential-acr-env/pkg/credhelper"
+	"github.com/chainguard-dev/kaniko/third_party/docker-credential-acr-env/pkg/credhelper"
 	"github.com/docker/docker-credential-helpers/credentials"
 	"github.com/spf13/cobra"
 )
