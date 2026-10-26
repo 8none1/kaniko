@@ -370,8 +370,8 @@ github.com/beorn7/perks/quantile
 # github.com/cespare/xxhash/v2 v2.3.0
 ## explicit; go 1.11
 github.com/cespare/xxhash/v2
-# github.com/chrismellard/docker-credential-acr-env v0.0.0-20230304212654-82a0ddb27589
-## explicit; go 1.18
+# github.com/chrismellard/docker-credential-acr-env v0.0.0-20230304212654-82a0ddb27589 => ./third_party/docker-credential-acr-env
+## explicit; go 1.25.0
 github.com/chrismellard/docker-credential-acr-env
 github.com/chrismellard/docker-credential-acr-env/cmd
 github.com/chrismellard/docker-credential-acr-env/pkg/credhelper
@@ -1461,3 +1461,4 @@ gopkg.in/warnings.v0
 ## explicit
 gopkg.in/yaml.v3
 # github.com/moby/go-archive => github.com/moby/go-archive v0.1.0
+# github.com/chrismellard/docker-credential-acr-env => ./third_party/docker-credential-acr-env

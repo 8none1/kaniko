@@ -78,7 +78,7 @@ require (
 	github.com/dimchansky/utfbom v1.1.1 // indirect
 	github.com/docker/cli v29.4.3+incompatible // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
-	github.com/docker/docker-credential-helpers v0.9.5 // indirect
+	github.com/docker/docker-credential-helpers v0.9.5
 	github.com/docker/go-connections v0.6.0 // indirect
 	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
@@ -213,3 +213,10 @@ require (
 // type aliases that were removed from go-archive v0.2.0. Pin to v0.1.0 until
 // docker/docker ships a release that drops the old API.
 replace github.com/moby/go-archive => github.com/moby/go-archive v0.1.0
+
+// github.com/chrismellard/docker-credential-acr-env is unmaintained and has no
+// fix for GO-2026-6225 (unanchored ACR hostname regex leaks Azure AD derived
+// tokens to lookalike hosts). Use the patched in-tree copy instead; it also
+// covers the docker-credential-acr-env binary built by deploy/Dockerfile.
+// See third_party/docker-credential-acr-env/PATCHES.md.
+replace github.com/chrismellard/docker-credential-acr-env => ./third_party/docker-credential-acr-env

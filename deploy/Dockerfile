@@ -46,7 +46,9 @@ RUN go install github.com/GoogleCloudPlatform/docker-credential-gcr/v2
 # Get Amazon ECR credential helper
 RUN go install github.com/awslabs/amazon-ecr-credential-helper/ecr-login/cli/docker-credential-ecr-login
 
-# Get ACR docker env credential helper
+# Get ACR docker env credential helper. go.mod replaces this module with the
+# patched in-tree copy in third_party/docker-credential-acr-env (GO-2026-6225),
+# so this builds from that source via vendor/, not from upstream.
 RUN go install github.com/chrismellard/docker-credential-acr-env
 
 RUN \

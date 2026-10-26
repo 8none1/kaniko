@@ -26,14 +26,13 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/google"
 )
 
+// GetKeychain returns a keychain for accessing container registries.
 func GetKeychain() authn.Keychain {
 	return authn.NewMultiKeychain(
 		authn.DefaultKeychain,
 		google.Keychain,
 		authn.NewKeychainFromHelper(ecr.NewECRHelper(ecr.WithLogger(io.Discard))),
-		// The ACR helper is wrapped so that only genuine ACR/MCR hosts reach it.
-		// See acr.go and GO-2026-6225.
-		authn.NewKeychainFromHelper(newAnchoredACRHelper(credhelper.NewACRCredentialsHelper())),
+		authn.NewKeychainFromHelper(credhelper.NewACRCredentialsHelper()),
 		authn.NewKeychainFromHelper(gitlab.NewGitLabCredentialsHelper()),
 	)
 }
