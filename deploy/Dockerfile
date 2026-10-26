@@ -46,10 +46,20 @@ RUN go install github.com/GoogleCloudPlatform/docker-credential-gcr/v2
 # Get Amazon ECR credential helper
 RUN go install github.com/awslabs/amazon-ecr-credential-helper/ecr-login/cli/docker-credential-ecr-login
 
-# Get ACR docker env credential helper. go.mod replaces this module with the
-# patched in-tree copy in third_party/docker-credential-acr-env (GO-2026-6225),
-# so this builds from that source via vendor/, not from upstream. -mod=vendor
-# keeps it from resolving anything from the network.
+# Get ACR docker env credential helper.
+#
+# NOTE: the import path below says "chrismellard", but this does NOT build the
+# upstream code. go.mod has
+#
+#   replace github.com/chrismellard/docker-credential-acr-env => ./third_party/docker-credential-acr-env
+#
+# which points at OUR patched copy in this repo (anchored hostname check, fix
+# for GO-2026-6225; see third_party/docker-credential-acr-env/PATCHES.md), and
+# vendor/ holds that patched source. The import path is only kept so that the
+# replace works and the Go imports in pkg/creds and tools/tools.go do not
+# change. -mod=vendor builds from vendor/ and stops Go resolving anything from
+# the network, so upstream's vulnerable helper cannot be pulled in. The checks
+# below fail the image build if that ever stops being true.
 RUN go install -mod=vendor github.com/chrismellard/docker-credential-acr-env
 
 # Guard (GO-2026-6225): fail the build unless the helper's build info shows it
