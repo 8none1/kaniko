@@ -14,13 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# third_party/ holds verbatim upstream copies (skipped by boilerplate.py too),
-# so keep their original formatting.
-files=$(find . -name "*.go" | grep -v -e vendor/ -e third_party/ | xargs gofmt -l -s)
+
+files=$(find . -name "*.go" | grep -v vendor/ | xargs gofmt -l -s)
 if [[ -n "${files}" ]]; then
     echo "Gofmt errors in files:"
     echo "${files}"
-    diff=$(find . -name "*.go" | grep -v -e vendor/ -e third_party/ | xargs gofmt -d -s)
+    diff=$(find . -name "*.go" | grep -v vendor/ | xargs gofmt -d -s)
     echo "${diff}"
     exit 1
 fi

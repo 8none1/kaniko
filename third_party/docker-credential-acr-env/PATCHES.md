@@ -43,3 +43,14 @@ Ownership: because the upstream module path is gone, vulnerability databases
 will not match any future advisory filed against
 `github.com/chrismellard/docker-credential-acr-env` to kaniko. Whoever
 maintains this fork should watch for such advisories and apply them here.
+
+Why not `github.com/osscontainertools/docker-credential-acr`: it is the natural
+long-term destination (it carries the full upstream history and fixed
+GO-2026-6225), but as of 2026-10-26 it is not a drop-in for this repository.
+v1.0.0 (2026-10-25) requires `go 1.27.0` while kaniko is on Go 1.26 in
+`go.mod`, CI and the builder image. v0.8.0 is Go 1.26 compatible and closest to
+upstream behaviour, but from v0.9.0 the fork adds an azidentity auth path behind
+`FF_DOCKER_ACR_AZIDENTITY` (on by default in v1.0.0), which is a bigger
+behavioural change than a credential-leak fix should carry. Its host check is
+anchored but coarser than ours (no label validation, no `Host == input` guard).
+Revisit when kaniko moves to Go 1.27, if we want advisory matching back.
