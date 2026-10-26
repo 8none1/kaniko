@@ -48,8 +48,37 @@ RUN go install github.com/awslabs/amazon-ecr-credential-helper/ecr-login/cli/doc
 
 # Get ACR docker env credential helper. go.mod replaces this module with the
 # patched in-tree copy in third_party/docker-credential-acr-env (GO-2026-6225),
-# so this builds from that source via vendor/, not from upstream.
-RUN go install github.com/chrismellard/docker-credential-acr-env
+# so this builds from that source via vendor/, not from upstream. -mod=vendor
+# keeps it from resolving anything from the network.
+RUN go install -mod=vendor github.com/chrismellard/docker-credential-acr-env
+
+# Guard (GO-2026-6225): fail the build unless the helper's build info shows it
+# came from the patched in-tree copy. This reads the binary's build info rather
+# than running it, so it works whatever the target arch (buildx emulation or a
+# cross-compiled binary).
+RUN go version -m /usr/local/bin/docker-credential-acr-env | grep -q '=>[[:space:]]*\./third_party/docker-credential-acr-env' || { \
+      echo "ERROR: docker-credential-acr-env was not built from ./third_party/docker-credential-acr-env." >&2; \
+      echo "It would ship the unpatched upstream helper (GO-2026-6225: ACR token leak to lookalike hosts)." >&2; \
+      echo "Check the replace directive in go.mod and re-run go mod vendor." >&2; \
+      go version -m /usr/local/bin/docker-credential-acr-env >&2; \
+      exit 1; }
+
+# Functional check (GO-2026-6225), only when the binary can run on the build
+# host: a lookalike ACR host must be answered with "credentials not found"
+# before any token request. The lookalike uses the reserved .invalid TLD and
+# AZURE_ENVIRONMENT is set to a non-existent cloud, so even an unpatched helper
+# fails before any network or token request instead of leaking a token from
+# the build machine.
+RUN if [ "$(go env GOHOSTARCH)" = "$(go env GOARCH)" ] && [ "$(go env GOHOSTOS)" = "$(go env GOOS)" ]; then \
+      out="$(printf 'evil.azurecr.io.example.invalid' | env -i HOME=/tmp AZURE_ENVIRONMENT=no-such-cloud /usr/local/bin/docker-credential-acr-env get 2>&1 || true)"; \
+      echo "docker-credential-acr-env get evil.azurecr.io.example.invalid: ${out}"; \
+      case "${out}" in \
+        *"credentials not found"*) ;; \
+        *) echo "ERROR: docker-credential-acr-env did not reject a lookalike ACR host (GO-2026-6225)." >&2; exit 1 ;; \
+      esac; \
+    else \
+      echo "Skipping docker-credential-acr-env functional check: cross-compiled for $(go env GOOS)/$(go env GOARCH)."; \
+    fi
 
 RUN \
   --mount=type=cache,target=/root/.cache/go-build \
